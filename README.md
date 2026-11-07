@@ -42,7 +42,11 @@
 <!-- Your community, and what your classifier sorts posts into. Three or four
      sentences. -->
 
-
+TakeMeter sorts Hacker News comments by what they give the reader. An
+`informed` comment backs its point with something you could go and check. A
+`hot_take` makes a claim with nothing behind it. `chatter` makes no claim about
+the topic at all. HN looks serious on the surface, so the useful question isn't
+"is this smart-sounding?" but "could I verify anything here?"
 
 ---
 
@@ -54,33 +58,57 @@
      The decision rule is worth a point on its own and it's the thing most
      people leave out. Every taxonomy has a hardest boundary. Name yours. -->
 
-### `label_one`
+### `informed`
 
-**Definition:**
-
-**Example 1:**
->
-
-**Example 2:**
->
-
-### `label_two`
-
-**Definition:**
+**Definition:** Makes a claim and backs it with something a reader could
+check: a number, a version, a named source or link that supports the point, or
+a concrete account of something the poster did or saw.
 
 **Example 1:**
->
+> Kimi 3.1 is a 2.8T parameter model. You can't run it on a 12GB VRAM GPU. You need 1.4TB of VRAM just to store the parameters.
 
 **Example 2:**
->
+> There's also the basic problem that an attacker who can serve you a falsified A record for a domain can also serve you a falsified CAA record. This is why CAs are required to use "multiple perspectives" when validating domain ownership before issuing certs, whereas web clients generally don't have access to redundant infrastructure like that.
+
+### `hot_take`
+
+**Definition:** States an opinion, verdict, prediction or general assertion
+about the topic without offering anything a reader could check.
+
+**Example 1:**
+> Vanilla CSS (rule engine based on files) is unusually hard for what it provides. It is quite bad abstraction. Aim of many styling solutions is to completely remove brittle CSS files .
+
+**Example 2:**
+> yeah anyone wise migrated away from PHP ages ago. The fact it got lipstick on back with PHP7 doesn't make it a well designed programming language. At least in my experience the vast majority of PHP websites nowadays are old abandoned PHP5 projects, which aren't much worse than just slopping a rewrite in something else
+
+### `chatter`
+
+**Definition:** Makes no claim about the topic: a genuine question, a joke,
+thanks or agreement, a bare link, or a remark about the conversation itself.
+
+**Example 1:**
+> Reminds me of "foreign" and "[Applause]" frequently appearing on YT auto-subtitles.
+
+**Example 2:**
+> Is auto mode only in the IDE? I'm not seeing it in the CLI on my end, version 1.2.14.
 
 ### The hardest boundary
 
-**Which two labels:**
+**Which two labels:** `informed` vs `hot_take`
 
 **The decision rule I used every time:**
-<!-- e.g. "If the post names a specific checkable fact, it's `analysis`, even
-     if the tone is heated." -->
+<!-- DRAFT used for pre-labelling. Rewrite it in your own words or replace it
+     before you review the 200 rows; the course says this rule is yours. -->
+Reasoning on its own is not support. If the post contains a detail a reader
+could verify (a number, a version, a named source or link, or a specific thing
+the poster did or saw) **and that detail carries the main point**, it's
+`informed`, even if the tone is heated. If the detail only decorates a verdict
+(a product name dropped, an unsourced estimate like "80–90% of people", or a
+hypothetical number), it's `hot_take`.
+
+Second rule, for `hot_take` vs `chatter`: a rhetorical question or a sarcastic
+one-liner that passes a verdict on the topic is `hot_take`. It is `chatter`
+only when nothing in it is a claim about the subject.
 
 
 
@@ -91,7 +119,11 @@
 <!-- Where you collected from, how you labelled, your counts, and three hard
      cases. -->
 
-**Where the posts came from:**
+**Where the posts came from:** Hacker News comments, pulled with
+`collect_hn.py` from the public Algolia HN API: up to 5 per story from 80
+popular stories (300+ points, last 60 days), 400 in total, in
+`data/raw_hn_posts.csv`. Of those, 220 are in `labels.csv`. Whole comments,
+with HTML tags removed and paragraph breaks joined with a space.
 
 **How I labelled them:** <!-- Cold first? Pre-labelled with AI and corrected?
 Say so plainly — the disclosure is required, not penalised. -->
