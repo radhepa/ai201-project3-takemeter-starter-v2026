@@ -355,9 +355,23 @@ and none is presented as one. The `note` column records which path each row took
 | F1 — `label_one` |  |  |  |
 | F1 — `label_two` |  |  |  |
 
-**What I predicted before I looked:**
-<!-- Milestone 1 asks you to write this BEFORE seeing the trained numbers. A
-     prediction made afterwards isn't one. -->
+**What I predicted before I looked:** *(committed before `baseline.py` was
+run; the trained numbers were already known from unit 5)*
+
+- **Overall accuracy: trained wins.** The trained model scores 0.606 mostly by
+  calling nearly everything `hot_take` (53.6% of the data). The zero-shot
+  model has no prior toward the majority label and has to read a long
+  definition slotted into "This post is {}.", which is an awkward hypothesis
+  for an NLI model. I expect it to spread its guesses and land around
+  0.35–0.45.
+- **`hot_take`: trained wins clearly**, because its recall is 1.000.
+- **`chatter`: the baseline wins.** The trained model's `chatter` F1 is 0.000,
+  so any correct zero-shot `chatter` call beats it. "Makes no assertion…, such
+  as a genuine question, a joke, thanks" is also the most surface-visible
+  definition.
+- **`informed`: roughly a tie, low for both.** The checkable-detail test needs
+  judgement neither model has: the trained model found 2 of 8, and I expect
+  the zero-shot model to over-assign `informed` to anything technical-sounding.
 
 **What the gap actually means:**
 <!-- If the baseline matched your trained model, your fine-tuning added
