@@ -61,8 +61,9 @@ the topic at all. HN looks serious on the surface, so the useful question isn't
 ### `informed`
 
 **Definition:** Makes a claim and backs it with something a reader could
-check: a number, a version, a named source or link that supports the point, or
-a concrete account of something the poster did or saw.
+check (a number, a version, a named source or link that supports the point, or
+a concrete account of something the poster did or saw), or its main point is
+itself a specific, checkable fact.
 
 **Example 1:**
 > Kimi 3.1 is a 2.8T parameter model. You can't run it on a 12GB VRAM GPU. You need 1.4TB of VRAM just to store the parameters.
@@ -72,8 +73,9 @@ a concrete account of something the poster did or saw.
 
 ### `hot_take`
 
-**Definition:** States an opinion, verdict, prediction or general assertion
-about the topic without offering anything a reader could check.
+**Definition:** States an opinion, verdict, prediction, recommendation or
+general assertion about the topic without offering anything a reader could
+check.
 
 **Example 1:**
 > Vanilla CSS (rule engine based on files) is unusually hard for what it provides. It is quite bad abstraction. Aim of many styling solutions is to completely remove brittle CSS files .
@@ -83,8 +85,9 @@ about the topic without offering anything a reader could check.
 
 ### `chatter`
 
-**Definition:** Makes no claim about the topic: a genuine question, a joke,
-thanks or agreement, a bare link, or a remark about the conversation itself.
+**Definition:** Makes no assertion about the topic: a genuine question, a
+joke, thanks, a personal feeling or status update, a bare link, or a remark
+about the conversation itself.
 
 **Example 1:**
 > Reminds me of "foreign" and "[Applause]" frequently appearing on YT auto-subtitles.
@@ -96,20 +99,26 @@ thanks or agreement, a bare link, or a remark about the conversation itself.
 
 **Which two labels:** `informed` vs `hot_take`
 
-**The decision rule I used every time:**
-<!-- DRAFT used for pre-labelling. Rewrite it in your own words or replace it
-     before you review the 200 rows; the course says this rule is yours. -->
-Reasoning on its own is not support. If the post contains a detail a reader
-could verify (a number, a version, a named source or link, or a specific thing
-the poster did or saw) **and that detail carries the main point**, it's
-`informed`, even if the tone is heated. If the detail only decorates a verdict
-(a product name dropped, an unsourced estimate like "80–90% of people", or a
-hypothetical number), it's `hot_take`.
+**The decision rule I used every time:** two questions, in order.
 
-Second rule, for `hot_take` vs `chatter`: a rhetorical question or a sarcastic
-one-liner that passes a verdict on the topic is `hot_take`. It is `chatter`
-only when nothing in it is a claim about the subject.
+1. **Does the post assert anything about the topic** (a fact, opinion,
+   verdict, prediction or recommendation)? Rhetorical questions and sarcasm
+   that imply a verdict count. Genuine questions, thanks, personal feelings or
+   status updates, pointless jokes, bare links and remarks about the
+   conversation do not. **No → `chatter`.**
+2. **Is there a specific detail a reader could check** (a number, date or
+   version; a named source, law or product *and what it says*; a link offered
+   as evidence; a concrete first-hand account) **and would the main point
+   collapse without it?** **Yes → `informed`. No → `hot_take`.**
 
+Reasoning on its own is not support. A detail that only decorates a verdict
+(a product name dropped, an unsourced "80–90% of people", a hypothetical
+number) leaves the post a `hot_take`, however heated or calm the tone.
+
+The rule was stress-tested on eight original borderline sentences (not real
+posts, not in the dataset) before the full labelling pass; the tests, what they
+changed, and one real borderline post are in
+[boundary_tests.md](boundary_tests.md).
 
 
 ---

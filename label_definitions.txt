@@ -3,6 +3,6 @@
 # Copy these from your README so the baseline is judged on exactly the
 # definitions you wrote. baseline.py reads this file.
 
-informed: makes a claim and backs it with something a reader could check, such as a number, a version, a named source or link that supports the point, or a concrete account of something the poster did or saw
-hot_take: states an opinion, verdict, prediction or general assertion about the topic without offering anything a reader could check
-chatter: makes no claim about the topic, such as a genuine question, a joke, thanks or agreement, a bare link, or a remark about the conversation itself
+informed: makes a claim and backs it with something a reader could check, such as a number, a version, a named source or link that supports the point, or a concrete account of something the poster did or saw, or whose main point is itself a specific checkable fact
+hot_take: states an opinion, verdict, prediction, recommendation or general assertion about the topic without offering anything a reader could check
+chatter: makes no assertion about the topic, such as a genuine question, a joke, thanks, a personal feeling or status update, a bare link, or a remark about the conversation itself
