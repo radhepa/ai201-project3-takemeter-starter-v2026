@@ -498,9 +498,34 @@ run; the trained numbers were already known from unit 5)*
 
 ## The Improvement
 
-**What I changed:**
+*(This part was written and committed before the after run.)*
 
-**Which diagnosis pointed at it:**
+**What I changed:** Option C, one hyperparameter: `EPOCHS` 3 → 10. Nothing
+else changed: same labels.csv, same split, learning rate 2e-5, batch 16,
+MAX_LENGTH 128, seeds 42/7/2024. The override is one line in the section 6
+cell (`EPOCHS = 10`), so the section 4 cell and its saved unit 5 output
+still show the 3-epoch run that produced `results.json`.
+
+**Which diagnosis pointed at it:** under-training. The evidence:
+
+- With 154 training posts and batch 16, 3 epochs is only 30 optimizer
+  steps. Training loss was still dropping at epoch 3 on every seed (0.865,
+  0.918, 0.886), and so was validation loss (0.904, 0.886, 0.923). Neither had
+  levelled off.
+- Seeds 7 and 2024 never left the majority-class prior: they predict
+  `hot_take` for all 33 test posts. Seed 42 got just 2 `informed` posts out.
+  A model that has learned a boundary and applies it badly looks different
+  from one that has not started learning it yet.
+- The agreement report is 30/30 (below), so the labelling process does apply
+  a written rule consistently. That makes "labels applied inconsistently"
+  (option A) the weaker explanation. Option B (+30 posts) adds about 14% more
+  data, but at 3 epochs that is still only about 36 steps.
+
+**Expected result if the diagnosis is right:** `chatter` and `informed`
+start getting predicted, macro F1 rises well above 0.235 on every seed, and
+the seed spread narrows. **If it is wrong:** `hot_take` still swallows
+everything, or val loss starts rising (overfitting 154 posts) and test
+numbers stay flat or fall.
 
 ### Run Log — After
 
