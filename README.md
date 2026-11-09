@@ -336,6 +336,20 @@ AI pre-labels re-checked by a second AI pass; the 20 rows reserved for human
 cold labelling were also labelled by AI. No label has been reviewed by a human,
 and none is presented as one. The `note` column records which path each row took.
 
+**Unit 6 (testing) disclosure:** Claude also produced the unit 6 work: the
+baseline prediction, the 30 staff-post labels in `my_staff_labels.csv` (AI,
+not human), the choice of improvement, and the analysis below. The notebook
+was executed headless with `nbclient`. Every number in the unit 6 sections
+comes from those runs' saved JSON files.
+
+One moment worth recording: the first headless "before" run saved a damaged
+notebook. Two section 4–5 cells had been run as function definitions only, so
+`results.json` would not be retrained. `nbclient` wrote that truncated copy
+back over the originals and dropped their unit 5 outputs (commit 826428f).
+The `results_three_seeds_before.json` numbers were unaffected. The two cells
+were restored byte-for-byte from the Part 1 commit before the after run, and
+the runner now puts the original cell back after executing it.
+
 <!-- ═══════════════════════ UNIT 6 — THE TEST ═══════════════════════
 
      Don't fill these in during unit 5.
@@ -613,19 +627,61 @@ numbers stay flat or fall.
 
 ### Run Log — After
 
+`EPOCHS = 10`, everything else unchanged, section 6 with
+`RUN_LABEL = "after"`, `results_three_seeds_after.json`. Run on CPU.
+
 | Criterion | Target | Seed 42 | Seed 7 | Seed 2024 | Verdict |
 |---|---|---|---|---|---|
-| 1.  |  |  |  |  |  |
-| 2.  |  |  |  |  |  |
-| 3.  |  |  |  |  |  |
-| 4.  |  |  |  |  |  |
-| 5.  |  |  |  |  |  |
+| 1. Accuracy | ≥ 0.65 | 0.636 | 0.606 | 0.727 | MISSED (2024 only) |
+| 2. Macro F1 | ≥ 0.55 | 0.535 | 0.481 | 0.657 | MISSED (2024 only) |
+| 3. `informed` / `chatter` F1 | each ≥ 0.45 | 0.400 / 0.444 | 0.471 / 0.222 | 0.737 / 0.444 | MISSED (`chatter` never reaches 0.45) |
+| 4. Label shares (data) | largest ≤ 0.60, smallest ≥ 0.20 | 0.536 / 0.209 | 0.536 / 0.209 | 0.536 / 0.209 | MET |
+| 5. Top-third minus bottom-third accuracy | ≥ 0.15 | 0.727 − 0.455 = 0.273 | 0.818 − 0.273 = 0.545 | 1.000 − 0.636 = 0.364 | MET |
+
+Seed spread: accuracy 0.121, macro F1 0.176, `informed` F1 0.337,
+`hot_take` F1 0.039, `chatter` F1 0.222.
+
+Confusion matrix after, seed 42:
+
+| true \ predicted | informed | hot_take | chatter |
+|---|---|---|---|
+| **informed** | 3 | 5 | 0 |
+| **hot_take** | 2 | 16 | 0 |
+| **chatter** | 2 | 3 | 2 |
 
 **Did it help, and how do I know:**
 
 <!-- If it didn't, say so. Relabelling that didn't help is a genuinely
      interesting result and earns full credit. -->
 
+**Yes, it fixed the diagnosed problem, but not enough to pass criteria 1–3
+on every seed.**
+
+| Measure (mean of 3 seeds) | Before | After | Change |
+|---|---|---|---|
+| Accuracy | 0.566 | 0.657 | +0.091 |
+| Macro F1 | 0.283 | 0.558 | +0.275 |
+| `informed` F1 | 0.133 | 0.536 | +0.403 |
+| `hot_take` F1 | 0.715 | 0.767 | +0.052 |
+| `chatter` F1 | 0.000 | 0.370 | +0.370 |
+
+- **The majority collapse is gone.** Before, two seeds predicted `hot_take`
+  for every post. After, every seed predicts all three labels. `chatter` went
+  from 0 correct on every seed to 2 / 1 / 2 of 7.
+- **The errors changed shape, which is what the diagnosis predicted.**
+  Before, every error flowed into `hot_take`. After, seed 42 has 5 `informed`
+  posts called `hot_take` and 2 going the other way, and `chatter` leaks into
+  both other labels. Errors now go both ways across the `informed`/`hot_take`
+  line: the model has started learning that boundary, and that is the hard
+  pair.
+- **Every macro F1 rose on every seed** (0.378→0.535, 0.235→0.481,
+  0.235→0.657), so the gain is not one lucky seed.
+- **Costs:** the seed spread widened (accuracy 0.061→0.121), and seed 2024
+  alone now clears criteria 1 and 2. Validation loss bottomed out around
+  epoch 6–9 and rose slightly by epoch 10 on all three seeds (for example,
+  seed 42 went from 0.813 at epoch 6 to 0.830 at epoch 10). So 10 epochs is
+  at the edge of overfitting 154 posts, and more epochs alone would not keep
+  helping.
 
 
 ---
@@ -634,12 +690,102 @@ numbers stay flat or fall.
 
 <!-- For each criterion still missed: what you'd do, and why you stopped. -->
 
-
+- **Criteria 1 and 2 (accuracy, macro F1).** These pass on seed 2024 only.
+  Seed 42's 0.636 is 0.014 short, which is inside the 0.121 seed spread, so
+  it can't honestly be called either way. Next I would try option B: about
+  30 more real HN posts, weighted toward `chatter` and `informed`, kept at
+  10 epochs. Val loss is already turning up at epoch 10, so more epochs is
+  not the next lever. More data is. I stopped because the brief allows
+  exactly one controlled change per round.
+- **Criterion 3 (`chatter` F1 ≥ 0.45).** Best is 0.444, which is one post
+  short on a 7-post test class. With 7 `chatter` posts, one prediction moves
+  F1 by roughly 0.1, so this criterion is mostly a measurement-size problem
+  as well as a model one. I would add `chatter` examples first (it is the
+  smallest label, 46 of 220). I would also report criterion 3 over a larger
+  test split before deciding whether the 0.45 target is reachable. I would
+  not lower the target.
+- **Criterion 5** now passes in a meaningful way, because the model predicts
+  all three labels. It is still measured on only 11 posts per third.
 
 **The gap between what I meant my labels to capture and what the model
 learned:**
 <!-- Two sentences. Your confusion matrix is the evidence. -->
 
+I meant `informed` vs `hot_take` to turn on whether a checkable detail
+carries the main point. After 10 epochs the model still sends 5 of 8
+`informed` posts to `hot_take` on seed 42, so it has not learned that rule
+reliably yet. I meant `chatter` to be "makes no assertion", but it still
+loses 5 of 7 `chatter` posts, to both other labels. It has learned a rough
+majority-versus-rest split, not the two-step test that defines the labels.
+
+---
+
+## Additional Evaluation Questions
+
+Every answer below comes from `baseline_results.json`, `results.json`,
+`results_three_seeds_before.json`, `results_three_seeds_after.json` or
+`agreement_results.json`.
+
+**Did fine-tuning meaningfully outperform zero-shot?** Yes on paper (0.606
+vs 0.242 accuracy, 0.378 vs 0.130 macro F1). But at 3 epochs most of that
+lead was the majority prior: always-`hot_take` scores 0.545 / 0.235. After
+the 10-epoch change, mean macro F1 is 0.558, more than double
+always-`hot_take`. That is the first result where fine-tuning clearly beats
+both the zero-shot model and the trivial baseline. On "was it substantial":
+for the 3-epoch run, no; for the 10-epoch run, yes. The lesson is that
+fine-tuning only pays off once it is trained long enough to leave the prior.
+
+**Which label has the weakest F1, and which the lowest recall?** `chatter`,
+both before and after. Mean F1 went 0.000 → 0.370. Recall after is
+0.286 / 0.143 / 0.286. `informed` recall rose the most (mean 0.083 → 0.583).
+`hot_take` recall fell from 1.000 to 0.83–0.89. That is the expected price
+of the model no longer calling everything `hot_take`.
+
+**Which label pair is confused most often?** Before: `chatter` → `hot_take`
+(7 of 7 on every seed). After: `informed` → `hot_take` on seeds 42 and 7 (5
+and 4 posts), and `chatter` → `hot_take` on seed 2024 (4 posts).
+
+**Are errors symmetrical or directional?** Before: completely directional,
+into `hot_take` only. After: still leaning toward `hot_take`, but it goes
+both ways. Seed 42 has `informed`→`hot_take` 5 against `hot_take`→`informed`
+2, and seed 2024 has 1 against 3. Errors in both directions across the
+`informed`/`hot_take` line are what a genuinely hard boundary looks like.
+
+**Do the three seeds agree?** Less than I'd like. Accuracy spread is 0.061
+before and 0.121 after. `informed` F1 ranges from 0.400 to 0.737 after.
+With 33 test posts, one post is 0.03 accuracy, so a 0.12 spread is about 4
+posts. Any criterion landing within a few posts of its target can't be
+called either way.
+
+**Did annotation ambiguity contribute?** I can't fully answer this from the
+data. The 30/30 staff agreement says the labeller applies a written rule
+consistently on clear posts, which argues against loose labelling. But all
+220 training labels are AI labels with no human check, and the hard cases in
+`boundary_tests.md` show the `informed`/`hot_take` line is genuinely hard
+for some posts. Measuring this would need a second independent (human)
+labelling of the test split, which this project does not have.
+
+**Did the improvement address the diagnosed weakness?** Yes. The diagnosis
+was "never left the majority prior". After the change, every seed predicts
+all three labels, and macro F1 rose on every seed. It did not get criteria 1–3
+over the line on all seeds.
+
+**Would more examples help more than more hyperparameter changes now?**
+Probably. Val loss stops improving around epoch 6–9 and rises a little by
+epoch 10, so more epochs is nearly exhausted. The remaining misses sit on
+the two smallest labels. That points to option B (more `chatter` and
+`informed` posts) as the next single change. This is a reasoned expectation,
+not a tested result.
+
+**What are the limits of measuring performance on this dataset?**
+- The test split is 33 posts, with only 7 `chatter` and 8 `informed`. One
+  post moves `chatter` F1 by about 0.1.
+- Labels are AI-generated and never human-reviewed, so the model is graded
+  against one AI labeller's reading of the rule.
+- All posts come from Hacker News comment threads collected in one pass, so
+  results may not carry over to other communities or later threads.
+- Only three seeds were run, and every split is seeded the same way, so seed
+  noise and split noise are mixed together.
 
 
 <!-- ═════════════════════════════════════════════════════════════════════
