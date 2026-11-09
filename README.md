@@ -350,10 +350,15 @@ and none is presented as one. The `note` column records which path each row took
 
 | Measure | Baseline | Trained | Difference |
 |---|---|---|---|
-| Overall accuracy |  |  |  |
-| Macro F1 |  |  |  |
-| F1 — `label_one` |  |  |  |
-| F1 — `label_two` |  |  |  |
+| Overall accuracy | 0.242 | 0.606 | +0.364 |
+| Macro F1 | 0.130 | 0.378 | +0.248 |
+| F1 — `informed` | 0.390 | 0.400 | +0.010 |
+| F1 — `hot_take` | 0.000 | 0.735 | +0.735 |
+| F1 — `chatter` | 0.000 | 0.000 | 0.000 |
+
+Baseline: `facebook/bart-large-mnli` zero-shot with the definitions in
+`label_definitions.txt`, run on the same 33 held-out test posts
+(`baseline_results.json`). Trained: seed 42, `results.json`.
 
 **What I predicted before I looked:** *(committed before `baseline.py` was
 run; the trained numbers were already known from unit 5)*
@@ -377,6 +382,23 @@ run; the trained numbers were already known from unit 5)*
 <!-- If the baseline matched your trained model, your fine-tuning added
      nothing — and that is a real finding, not a failure. Say it plainly. -->
 
+The gap is smaller than it looks. Each model mostly guesses one label. The
+baseline called **all 33** posts `informed`. The trained model called 31 of
+33 `hot_take`. Always guessing `hot_take` would score 0.545 accuracy and
+0.235 macro F1 on this test set. So most of the trained model's +0.364
+comes from the majority prior it absorbed, not from reading the posts.
+Measured against always-`hot_take`, fine-tuning added +0.061 accuracy, and
+that came entirely from 2 correctly caught `informed` posts.
+
+Against my prediction:
+- Accuracy went the way I said, but the baseline was even worse than my
+  0.35–0.45 guess.
+- `hot_take` was right.
+- `informed` being a tie was right (0.390 vs 0.400). My guess that zero-shot
+  would over-assign `informed` held at the extreme.
+- `chatter` was wrong. The baseline did not win it: both scored 0.000.
+  "This post is {definition}." never favoured the `chatter` hypothesis, even
+  for thanks and jokes.
 
 
 ---
@@ -386,30 +408,41 @@ run; the trained numbers were already known from unit 5)*
 <!-- Five criteria across three seeds. The notebook's section 6 prints the
      spread table; the Target and Verdict columns are yours. -->
 
+Default hyperparameters (3 epochs, lr 2e-5, batch 16), section 6 with
+`RUN_LABEL = "before"`, `results_three_seeds_before.json`. Run on CPU.
+
 | Criterion | Target | Seed 42 | Seed 7 | Seed 2024 | Verdict |
 |---|---|---|---|---|---|
-| 1.  |  |  |  |  |  |
-| 2.  |  |  |  |  |  |
-| 3.  |  |  |  |  |  |
-| 4.  |  |  |  |  |  |
-| 5.  |  |  |  |  |  |
+| 1. Accuracy | ≥ 0.65 | 0.606 | 0.545 | 0.545 | MISSED |
+| 2. Macro F1 | ≥ 0.55 | 0.378 | 0.235 | 0.235 | MISSED |
+| 3. `informed` / `chatter` F1 | each ≥ 0.45 | 0.400 / 0.000 | 0.000 / 0.000 | 0.000 / 0.000 | MISSED |
+| 4. Label shares (data) | largest ≤ 0.60, smallest ≥ 0.20 | 0.536 / 0.209 | 0.536 / 0.209 | 0.536 / 0.209 | MET |
+| 5. Top-third minus bottom-third accuracy | ≥ 0.15 | 0.818 − 0.545 = 0.273 | 0.727 − 0.273 = 0.455 | 0.909 − 0.182 = 0.727 | MET (hollow, see below) |
+
+Seed spread (from the notebook): accuracy 0.061, macro F1 0.143, `informed`
+F1 0.400, `hot_take` F1 0.029, `chatter` F1 0.000. Seeds 7 and 2024
+predicted `hot_take` for every one of the 33 posts.
 
 ### Confusion matrix
 
-<!-- ⚠️ TYPED AS A MARKDOWN TABLE. The notebook prints one ready to paste.
-     An image of a matrix earns nothing. -->
+Seed 42 (the notebook's section 7 uses the first seed):
 
-| true \ predicted |  |  |  |
+| true \ predicted | informed | hot_take | chatter |
 |---|---|---|---|
-| **** |  |  |  |
-| **** |  |  |  |
-| **** |  |  |  |
+| **informed** | 2 | 6 | 0 |
+| **hot_take** | 0 | 18 | 0 |
+| **chatter** | 0 | 7 | 0 |
 
 **My biggest off-diagonal number, and what it means:**
-<!-- Not "the model made mistakes" — WHICH boundary it didn't learn, and which
-     direction. "7 real analysis posts were called hot_take and only 3 went the
-     other way" is a direction, not just an error rate. -->
 
+**7 real `chatter` posts were called `hot_take`, and 0 went the other way.**
+The next biggest is the same shape: 6 real `informed` posts were called
+`hot_take`, and 0 went the other way. Every error flows into `hot_take` and
+none flows out. So the model has not learned the step-1 boundary ("does it
+assert anything?") in either direction, and has barely started on the
+step-2 boundary ("is there a checkable detail?"). It isn't confusing two
+labels. It is falling back to the majority one. On seeds 7 and 2024 that
+fallback is complete.
 
 
 ---
@@ -421,11 +454,11 @@ run; the trained numbers were already known from unit 5)*
 
 | # | Criterion | Target | Verdict | How I decided |
 |---|---|---|---|---|
-| 1 |  |  |  |  |
-| 2 |  |  |  |  |
-| 3 |  |  |  |  |
-| 4 |  |  |  |  |
-| 5 |  |  |  |  |
+| 1 | Accuracy | ≥ 0.65 on every seed | MISSED | Best seed 0.606. Seeds 7 and 2024 are at the always-`hot_take` floor of 0.545. |
+| 2 | Macro F1 | ≥ 0.55 on every seed | MISSED | 0.378 / 0.235 / 0.235. Two seeds score exactly the always-`hot_take` value. |
+| 3 | `informed` and `chatter` F1 | each ≥ 0.45 on every seed | MISSED | `chatter` is 0.000 on all three. `informed` is 0.400 on seed 42 and 0.000 on the others. |
+| 4 | Label balance | largest ≤ 0.60, smallest ≥ 0.20 | MET | A data criterion: 118/56/46 of 220 = 0.536 / 0.255 / 0.209, the same for every seed. `validate_labels.py` passes. |
+| 5 | Confidence separates right from wrong | top third − bottom third ≥ 0.15 on every seed | MET, but hollow | 0.273 / 0.455 / 0.727. On seeds 7 and 2024 every prediction is `hot_take`, so sorting by confidence only ranks how `hot_take`-like each post looks. The top third is mostly real `hot_take` posts. This meets the number but says nothing about whether the model knows when it's wrong. |
 
 **Diagnoses**
 
@@ -438,6 +471,38 @@ run; the trained numbers were already known from unit 5)*
      have that can tell a LABELLING problem from a MODEL problem, and this
      section is graded on whether you used it that way. -->
 
+Criteria 1, 2 and 3 miss for the same reason, so there is one diagnosis.
+**The model never left the majority-class prior: a training-volume problem,
+not a labelling problem.** Here is how I separated the two.
+
+1. **The error shape points at the model.** If labels were applied
+   inconsistently, a model that had learned something would make errors in
+   both directions across a boundary: some `informed` called `hot_take`, and
+   some `hot_take` called `informed`. Here every error goes into `hot_take`
+   (13 in, 0 out on seed 42; 15 in, 0 out on the other two seeds). That
+   pattern is a model that has not learned the boundary yet.
+2. **The training curve says it stopped early.** 154 training posts at
+   batch 16 is 10 steps per epoch, so 30 steps in total. Train loss
+   (0.865 / 0.918 / 0.886) and val loss (0.904 / 0.886 / 0.923) were both
+   still falling at epoch 3 on every seed. Val accuracy sat at the 0.545
+   floor through all 3 epochs on seeds 7 and 2024.
+3. **The agreement report argues against a labelling problem, with limits.**
+   The labelling process scored 30/30 against staff on a different taxonomy
+   (below), so it applies a written two-part rule consistently. That makes
+   pile (a), "I applied my rule loosely", unlikely as the main cause. The
+   limits: the staff set was easy, and the same AI that pre-labelled
+   `labels.csv` also labelled the 30 staff posts. It tests that labeller's
+   consistency, not an independent human's. It cannot rule out that my own
+   `informed`/`hot_take` line is fuzzy in places. The hard cases in
+   `boundary_tests.md` show it is a genuinely hard pair.
+4. **Too few examples per minority label makes it worse.** About 32
+   `chatter` and 39 `informed` posts land in training, against about 83
+   `hot_take`. With only 30 steps, the cheapest way to lower loss is to
+   predict `hot_take`.
+
+The fix that follows is more optimisation on the same data (option C, more
+epochs). Relabelling (A) or adding data (B) is premature until the model
+actually learns something from the labels it already has.
 
 
 ---
@@ -450,7 +515,14 @@ run; the trained numbers were already known from unit 5)*
      data/staff_taxonomy.md, not your own — so every argument below is made
      from those definitions and those decision rules. -->
 
-**Agreement rate:** ___ / 30 = ___%
+**Agreement rate:** 30 / 30 = 100% (`agreement_results.json`)
+
+**How the 30 labels were made (disclosure):** `my_staff_labels.csv` was
+produced with automated assistance. Claude labelled the 30 posts in
+`data/staff_posts.csv` under `data/staff_taxonomy.md`. It is not an
+independent human annotation. It was committed in 50de437 before the answer
+key was opened. The key (`data/staff_labels.csv`) was downloaded from the
+course site afterwards and then `python agreement.py` was run.
 
 <!-- Nobody grades this number. A 60% who argues every disagreement from the
      stated rules beats a 95% who wrote "staff was right" nine times. Several
@@ -472,26 +544,38 @@ run; the trained numbers were already known from unit 5)*
      written rule two different ways on 30 posts, that is direct evidence about
      what you did across your own 200. -->
 
-**1.**
-> *The post:*
->
-> *Staff said / I said:*
->
-> *My call, and why:*
->
-> *Which pile:*
+**There were no disagreements, so there is nothing to adjudicate and all
+three piles are empty.**
 
-**2.**
-> *The post:*
->
-> *Staff said / I said:*
->
-> *My call, and why:*
->
-> *Which pile:*
+**Was the set easy, or is the rule tight?** Mostly easy. Most posts are
+clear examples of one label:
+- sp_015 "Marathon training plans are all the same plan with different
+  fonts." is a textbook `hot_take`.
+- sp_030 "Signed up. Card's charged… immediately regret everything." is a
+  textbook `reaction`.
+
+The posts also sit in label blocks in id order (sp_001–010 analysis,
+sp_011–020 hot_take, sp_021–030 reaction). The labeller read them in that
+order, so I can't rule out that the structure cued it. The two closest calls
+were:
+
+- **sp_010** (three runners, different shoes, within 10 seconds over 5
+  miles). It is first-person, so rule 2 pulls toward `reaction`. But the
+  10-seconds-over-5-miles comparison is what carries the argument that shoes
+  matter less than claimed, so rule 1 makes it `analysis`. Staff agreed.
+- **sp_020** ("Every injury thread on this forum is the same injury and the
+  same three replies"). It sounds like the writer's frustration, but it is
+  an unsupported general claim about the forum, not about the writer, so
+  rule 2 makes it `hot_take`. Staff agreed.
 
 **What the pattern in my disagreements tells me:**
 
+There is no disagreement pattern to read. What 100% shows is narrower: the
+labelling process applies a written "does a fact carry the argument" rule
+the same way staff do on clear-cut posts. That supports the diagnosis that
+the before-run misses are a model problem. It does not show that the 220
+`labels.csv` rows are human-quality, because they come from the same AI
+labeller and were never human-reviewed (see The Dataset).
 
 
 ---
