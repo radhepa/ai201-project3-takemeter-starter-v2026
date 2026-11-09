@@ -1,0 +1,199 @@
+{
+  "model": "facebook/bart-large-mnli",
+  "n": 33,
+  "seed": 42,
+  "held_out": true,
+  "used_definitions": true,
+  "scores": {
+    "n": 33,
+    "accuracy": 0.24242424242424243,
+    "f1_macro": 0.13008130081300814,
+    "per_label": {
+      "chatter": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "support": 7
+      },
+      "hot_take": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "support": 18
+      },
+      "informed": {
+        "precision": 0.24242424242424243,
+        "recall": 1.0,
+        "f1": 0.3902439024390244,
+        "support": 8
+      }
+    }
+  },
+  "predictions": [
+    {
+      "text": "Probably another tool help steal more tokens. Or to probe more controversial topics without fear of getting banned. Would you be able to check in the history of what they made?",
+      "gold": "hot_take",
+      "predicted": "informed"
+    },
+    {
+      "text": "https://github.com/Made-In-Basement/ember would seem to raise the odds, slightly. https://www.reddit.com/r/ClaudeAI/comments/1wfpydl/i_asked_c...",
+      "gold": "informed",
+      "predicted": "informed"
+    },
+    {
+      "text": "That's not sustainable. If $DAYJOB becomes too busy the project will stall because the random person won't have enough time to work on it anymore.",
+      "gold": "hot_take",
+      "predicted": "informed"
+    },
+    {
+      "text": "I'm checking by ssh'ing into my environment, and this is what I see as of 21:41 UTC, several hours after the patches were published: wpe-user@MYENVIRONMENT.ssh.wpengine.net:~$ php -v PHP 8.4.26 (cli) (built: Sep 23 2026 06:24:29) (NTS) Copyright (c) The PHP Group Built by Perforce Zend (www.zend.com) Zend Engine v4.4.26, Copyright (c) Zend Technologies with Zend OPcache v8.4.26, Copyright (c), by Zend Technologies I keep hoping for either a change in the version or the build date, but nothing yet. The incident status page says they're deploying, but there haven't been further updates about how far along they are.",
+      "gold": "informed",
+      "predicted": "informed"
+    },
+    {
+      "text": "Interesting. Perhaps I can see this being quickly adopted in LLMs-as-a-judge, where you normally need (a) a structured answer, say, with lots of different fields (metrics) and (b) you want the judge to be fast, not being a bottleneck.",
+      "gold": "hot_take",
+      "predicted": "informed"
+    },
+    {
+      "text": "\"4\" ... f!cking \"4\" !!!! Here i am with fully random 32 chracater passwords for my fu!king gmail and these a$$holes are using \"4\" for an international CA key",
+      "gold": "hot_take",
+      "predicted": "informed"
+    },
+    {
+      "text": "You can still pursue understanding of things, full automation doesn't preclude that. What it does is make it a choice rather than a survival necessity. The latter is where the \"suffering\" comes from.",
+      "gold": "hot_take",
+      "predicted": "informed"
+    },
+    {
+      "text": "I love this example. I'm not interested in this particular topic, but I'm very interested in this type of website. Are you actively trying to create a web-based forum? I'm curious if you know of others, with more general topics.",
+      "gold": "chatter",
+      "predicted": "informed"
+    },
+    {
+      "text": "Cells have machinery for removing worn out proteins (tag em with ubiquitin and send them to incinerator [lysomes]). Doesn't surprise me too much a useful mutation (this folding is wrong detector) could work its way in.",
+      "gold": "informed",
+      "predicted": "informed"
+    },
+    {
+      "text": "It's really interesting folks at CF and Deno making this decision while unikernel slowly integrate into mainstream cloud computing as Prisma and Netlify adopting Unikraft. With AI is getting better each day there will comes a day when people be like \"why we still running javascript in server?\"",
+      "gold": "informed",
+      "predicted": "informed"
+    },
+    {
+      "text": "I always thought reputation was easily fixed by a message from above. Tht seems to be the pattern from politics to business.",
+      "gold": "hot_take",
+      "predicted": "informed"
+    },
+    {
+      "text": "TVs and monitors have this naming strategy because of retail stores. You can't price compare between different stores if every one has their own exclusive model with a different set of RNG numbers in the name. Same for appliances or most products that are bought through a middleman rather than directly from the manufacturer.",
+      "gold": "hot_take",
+      "predicted": "informed"
+    },
+    {
+      "text": "yeah anyone wise migrated away from PHP ages ago. The fact it got lipstick on back with PHP7 doesn't make it a well designed programming language. At least in my experience the vast majority of PHP websites nowadays are old abandoned PHP5 projects, which aren't much worse than just slopping a rewrite in something else",
+      "gold": "hot_take",
+      "predicted": "informed"
+    },
+    {
+      "text": "Oh, my, indeed! That's gonna traumatize the poor dude for life.",
+      "gold": "chatter",
+      "predicted": "informed"
+    },
+    {
+      "text": "Lol, your claim is \"the numbers look bad for the Democrats, but they never explicitly said they want the country to be invaded with illegals, they just did it\" That's the most brainwashed thing I've read all day Don't trust what the politicians say, look at what they do: - Illegal migrants under Biden: +7.3 million net illegal migrants - During Trump's first term? It's -34,000 (yes, that's a negative number) - How about the tally for Obama's second term? That's +493,000 net illegal migrants As shown by those numbers, border enforcement does not need special legislation. If the people in power want to curb it, they can do so. If they want to turn on the tap of illegals, they can. And the Democrats did turn up the tap to the max.",
+      "gold": "informed",
+      "predicted": "informed"
+    },
+    {
+      "text": "Anything that it has access to it can potentially share. The solution is, like you are already alluding to, to not give it access. But that requires a level of isolation that folks normally don't do. To the contrary, the AI agent ads to non-tech folks emphasize it acting like a personal assistant which by its nature needs access to data you don't normally want public. Emails, photos, files with written notes, etc.",
+      "gold": "hot_take",
+      "predicted": "informed"
+    },
+    {
+      "text": "FYI, math is a language. Which is actually an important part of the Navier-Stokes conversation. Solving hard problems expands the vocabulary. The problems are hard, illustrating a region we know where the language is insufficient. So the point isn't so much to solve the specific problem, but to figure out how to discuss problems like it. But there's a big difference between talking about something in an extremely convoluted manner then people struggle to understand and inventing a new word that simplifies our discussions. Though this is grossly oversimplified. It's a HN comment, not a lecture on metamathematics or metaml",
+      "gold": "hot_take",
+      "predicted": "informed"
+    },
+    {
+      "text": "\"Droning an American citizen\" is usually a problem with birthright citizenship, not with drones.",
+      "gold": "hot_take",
+      "predicted": "informed"
+    },
+    {
+      "text": "The government can include corporations. You could even argue the American government and American corporatocracy have already swapped roles. Equifax is almost more government than the SEC is.",
+      "gold": "hot_take",
+      "predicted": "informed"
+    },
+    {
+      "text": "It's smaller than an F150 Lightning. Sure, it's not for everyone, but if you want a truck that can haul large items or plywood sheets, it's reasonable.",
+      "gold": "informed",
+      "predicted": "informed"
+    },
+    {
+      "text": "He was good at comedy too https://m.youtube.com/watch?v=Fg_cwI1Xj4M",
+      "gold": "chatter",
+      "predicted": "informed"
+    },
+    {
+      "text": "PHP has been a security dumpster fire for decades. It's just how the entire web ecosystem works: some web designer lacking any technical know-how is asked to make a site and dumps WordPress on it out of habit. Even though there are much more secure CMS technologies out there like Umbraco or Piranha (both ASP.NET) and web stores like NopCommerce (ASP.NET also). There are just too many technically clueless people building web sites and web stores.",
+      "gold": "hot_take",
+      "predicted": "informed"
+    },
+    {
+      "text": "Good point. Procrastination is a big part of the issue for a lot of people. I'm a hopeless procrastinator. Some people are better at this than others. Focusing your attention on things that matter is a good skill to have. Even if you only succeed part of your time, it's better than nothing.",
+      "gold": "hot_take",
+      "predicted": "informed"
+    },
+    {
+      "text": "A stable instruction set would be nice. But hi, if I spent $10,000 on a piece of hardware, let me program the metal, thanks.",
+      "gold": "hot_take",
+      "predicted": "informed"
+    },
+    {
+      "text": "Ok, yeah, I forgot that people do ship api keys inside binaries",
+      "gold": "chatter",
+      "predicted": "informed"
+    },
+    {
+      "text": "fwiw the post mentioned Shopify and Spotify, hence why you see discussion of both",
+      "gold": "chatter",
+      "predicted": "informed"
+    },
+    {
+      "text": "My comment was about an Opus 5.5 medium refusal, for a request which was then satisfied by Opus 5.5 low.",
+      "gold": "chatter",
+      "predicted": "informed"
+    },
+    {
+      "text": "I feel like a HN post hitting 1000+ points is a good way to catch up, communication wise.",
+      "gold": "chatter",
+      "predicted": "informed"
+    },
+    {
+      "text": "That's not how Hola works. You're not sharing your IP with some other Hola user. You're sharing it with bots used for all sorts of good and bad things.",
+      "gold": "informed",
+      "predicted": "informed"
+    },
+    {
+      "text": "Agreed, Viable nonviolent protests are a useful signal that society has not (yet) converted to outright authoritarianism. This is their only use IMO. They cannot effect meaningful change. But their existence signifies we can still effect such a change without resorting to violence. There is a threshold beyond which change can only come about via violence. I don\u2019t wish to speculate how far away from that threshold we currently find ourselves. I think we\u2019re closer now than we were 10 years ago.",
+      "gold": "hot_take",
+      "predicted": "informed"
+    },
+    {
+      "text": "I think I found the article you alluded to: https://thephp.foundation/blog/2026/06/16/php-through-a-scre... The \"Syntax as landmarks\" section sounds like he's comparing it particularly to Python. The quirk of `$` denoting a variable did kind of work out for him. Especially compared to Python where you declare a variable by assigning it. But it's not like PHP was designed with a special character for each syntax role. He still needs to use context to infer other roles. PHP has the advantage of being preinstalled or easy to install in a lot of environments. I had to investigate the blind developer thing because I'm still on the hunt for a second advantage.",
+      "gold": "informed",
+      "predicted": "informed"
+    },
+    {
+      "text": "Certainly, just like Retina Display\u2122 technology and Taptic Engine\u2122 integration. These are unparalleled features. You cannot even imagine them, if you don't own an iPhone.",
+      "gold": "hot_take",
+      "predicted": "informed"
+    },
+    {
+      "text": "I'm not fond of Musk, but I can separate that from judging the aesthetics of a vehicle. The CT looks okayish from the front, but from the back it's an ugly bloated mess. Also it's just way too big of a vehicle for my taste. Like Hummers, I just have no desire to drive a vehicle that large.",
+      "gold": "hot_take",
+      "predicted": "informed"
+    }
+  ]
+}
