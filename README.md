@@ -48,6 +48,17 @@ TakeMeter sorts Hacker News comments by what they give the reader. An
 the topic at all. HN looks serious on the surface, so the useful question isn't
 "is this smart-sounding?" but "could I verify anything here?"
 
+The distinction matters because almost every HN comment *sounds* reasoned. A
+reader skimming a 300-comment thread wants the handful that give them a version
+number, a benchmark, a statute or a first-hand account, and the label is about
+exactly that, not about whether the poster is right or polite. Hacker News was
+chosen over a Minecraft community because it is fully public with an open API
+(Reddit returned 403 to scripted requests from this machine), it has no
+spoilers, and its comments mix technical evidence, confident opinion and
+off-topic banter in roughly the proportions a three-way split needs. The
+community research and the four candidate distinctions I saw before settling
+on these labels are in [notes.md](notes.md).
+
 ---
 
 ## Label Taxonomy
@@ -134,43 +145,72 @@ popular stories (300+ points, last 60 days), 400 in total, in
 `data/raw_hn_posts.csv`. Of those, 220 are in `labels.csv`. Whole comments,
 with HTML tags removed and paragraph breaks joined with a space.
 
-**How I labelled them:** <!-- Cold first? Pre-labelled with AI and corrected?
-Say so plainly — the disclosure is required, not penalised. -->
+**How I labelled them:** every label in `labels.csv` was produced by an AI
+model (Claude), not by a person, and the `note` column says so on every row.
+
+1. 200 rows were pre-labelled by Claude under the draft definitions.
+2. After the taxonomy was finalized (see [boundary_tests.md](boundary_tests.md)),
+   Claude did a second pass over all 200 under the final two-step rule. It
+   kept 195 and changed 5 (3 `chatter`→`hot_take`, 1 `hot_take`→`chatter`,
+   1 `informed`→`chatter`), with the reason written in each row's note.
+3. 20 rows had been set aside for unaided human ("cold") labelling. That human
+   pass did not happen. Claude labelled them under the final rule instead, and
+   their notes say *this is NOT a human label*. No row is marked `cold`.
+
+Nothing here has been checked by a human yet, so treat the labels as one
+annotator's consistent application of the written rule, not as ground truth.
+
+`python validate_labels.py` checks the file before training: ≥ 200 rows, exact
+columns `text,label,note`, no blank text/label/note, only the notebook's
+`LABELS`, no duplicate posts, no label over 70% (and criterion 4's 20–60%
+band), and that every post appears verbatim in `data/raw_hn_posts.csv`. It
+passes.
 
 **Counts per label:**
 
 | Label | Count | Share |
 |---|---|---|
-|  |  |  |
-|  |  |  |
-|  |  |  |
-| **Total** |  | 100% |
+| `hot_take` | 118 | 53.6% |
+| `informed` | 56 | 25.5% |
+| `chatter` | 46 | 20.9% |
+| **Total** | **220** | 100% |
 
 **Three hard cases**
 
-<!-- Any post that made you pause: what it was, which two labels it could have
-     been, and what you chose. These are worth more than the easy 190. -->
+**1.** `informed` vs `hot_take`: heated tone, real figures
+> *The post:* "Lol, your claim is "the numbers look bad for the Democrats, but they never explicitly said they want the country to be invaded with illegals, they just did it" That's the most brainwashed thing I've read all day Don't trust what the politicians say, look at what they do: - Illegal migrants under Biden: +7.3 million net illegal migrants - During Trump's first term? It's -34,000 (yes, that's a negative number) - How about the tally for Obama's second term? That's +493,000 net illegal migrants As shown by those numbers, border enforcement does not need special legislation. If the people in power want to curb it, they can do so. If they want to turn on the tap of illegals, they can. And the Democrats did turn up the tap to the max."
+>
+> *Could have been:* `hot_take` (insulting, partisan, ends on a sweeping verdict) or `informed`.
+>
+> *I chose `informed`, because:* rule step 2 ignores tone. The post gives three specific, checkable figures and its conclusion ("enforcement does not need special legislation") is argued *from* them. Remove the numbers and nothing is left. Hard because everything about the register says hot take, and a reader is tempted to label the politics instead of the structure.
 
-**1.**
-> *The post:*
+**2.** `informed` vs `hot_take`: a number that isn't evidence
+> *The post:* "Humans are bound by communication overhead and non-market-based incentives. Adding 3x engineers does not do anything. On an average workplace, you have 80-90% of dead weight who shuffle pointless information around and play social games to keep their children fed. Giving the 10% access to these tools is a crazy value multiplier, because they can run at lightning speed with their mental models and the right incentives for the company."
 >
-> *Could have been:*
+> *Could have been:* `informed` (it has percentages) or `hot_take`.
 >
-> *I chose, because:*
+> *I chose `hot_take`, because:* "80-90% dead weight" has no source and no way to check it. It is an estimate dressed as a statistic, and it decorates the verdict rather than supporting it. Hard because a keyword reading ("has a number → informed") gets it wrong, and the model may well learn exactly that shortcut.
 
-**2.**
-> *The post:*
+**3.** `chatter` vs `hot_take`: praise that turns into a verdict
+> *The post:* "DDO website is refreshingly clean. Very reminiscent of early 2000's era, it just gets out of your way inviting you to browse through all the content. I wish more websites retained such functional design. The amount of visual stimulus thrown at you these days can be quite overbearing. While I just glanced through pentagram's site, I found myself spending a lot of time going through DDO's pages. They seem to have some really solid articles too. Thanks for sharing!"
 >
-> *Could have been:*
+> *Could have been:* `chatter` (a friendly thank-you, which is how it was first pre-labelled) or `hot_take`.
 >
-> *I chose, because:*
+> *I chose `hot_take`, because:* step 1 asks whether the post asserts anything about the topic. "Thanks for sharing" doesn't, but "the amount of visual stimulus thrown at you these days can be quite overbearing" is a general design verdict with nothing checkable behind it. This case is what added the praise/verdict line to the rule. Hard because the tone is pure chatter.
 
-**3.**
-> *The post:*
->
-> *Could have been:*
->
-> *I chose, because:*
+**Known limitations**
+
+- **Single, non-human annotator.** All labels are AI-produced; there is no
+  inter-annotator agreement measured on these 220. Unit 6's `agreement.py`
+  against the staff set is the first real consistency check.
+- **Lopsided toward `hot_take` (53.6%).** That is honest to HN, but it means
+  the trivial "always `hot_take`" guesser scores ~0.54 accuracy.
+- **Small test split.** 15% of 220 is 33 posts, about 7–8 each for `informed`
+  and `chatter`, so their F1 moves ~0.1 per post.
+- **Time and topic window.** Comments come from 80 popular stories over 60
+  days, mostly AI, security and US politics; other HN topics are under-represented.
+- **Text cleaning.** HTML tags were stripped and paragraph breaks joined with
+  a space, so quoted replies (`>`) and lists run together.
 
 ---
 
@@ -178,15 +218,76 @@ Say so plainly — the disclosure is required, not penalised. -->
 
 <!-- Your starting model, your settings, and anything you changed and why. -->
 
-**Base model:**
+**Base model:** `distilbert-base-uncased` (DistilBERT, 6 layers, with a
+freshly initialized 3-way classification head), fine-tuned with the Hugging
+Face `Trainer` in `takemeter.ipynb`.
 
-**Settings:** <!-- epochs, learning rate, batch size, seed -->
+**Device:** `cpu` (torch `2.15.0+cpu`). The laptop has an NVIDIA RTX 3060, but
+the project's pinned `.venv` has the CPU-only PyTorch wheel, and `test.py` and
+section 1 both report `cpu`. I kept the pinned environment rather than swap in
+a CUDA build; on 154 training posts the run takes a few minutes on CPU.
 
-**Anything I changed from the defaults, and why:**
+**Settings:**
 
-**Split sizes:** <!-- train / val / test, and per-label counts in the test
-split. If a label had fewer than about 8 in test, say so — it explains a lot
-of next unit's variance. -->
+| Setting | Value |
+|---|---|
+| Epochs | 3 |
+| Learning rate | 2e-5 |
+| Batch size | 16 |
+| Max tokens per post | 128 |
+| Seed | 42 |
+| Split | 70 / 15 / 15, stratified, done by the notebook |
+
+**Anything I changed from the defaults, and why:** nothing. All hyperparameters
+are the notebook defaults. The only notebook edits are `LABELS =
+["informed", "hot_take", "chatter"]` and the `NAME`/`EMAIL` labels. Sections
+1–5 were executed in order from the project `.venv` (via `nbclient`, so the
+outputs are saved in the committed notebook); sections 6–7 were not run.
+
+**Split sizes:** train 154 · val 33 · test 33.
+
+| Label | Train | Val | Test |
+|---|---|---|---|
+| `informed` | 40 | 8 | 8 |
+| `hot_take` | 82 | 18 | 18 |
+| `chatter` | 32 | 7 | 7 |
+
+`chatter` has only 7 test posts and `informed` 8, so each of their F1 scores
+moves by roughly 0.1 when a single post changes. `test_split.csv` holds the 33
+held-out posts; none of them appear in the train or validation splits
+(re-derived from the same seed and checked).
+
+**Training log** (from the notebook output):
+
+| Epoch | Training loss | Validation loss | Val accuracy | Val macro F1 |
+|---|---|---|---|---|
+| 1 | 1.0427 | 0.9682 | 0.545 | 0.235 |
+| 2 | 0.9169 | 0.9185 | 0.576 | 0.314 |
+| 3 | 0.8651 | 0.9039 | 0.576 | 0.312 |
+
+**Held-out test results** (`results.json`, seed 42, 33 posts):
+
+| Measure | Value |
+|---|---|
+| Accuracy | 0.606 |
+| Macro F1 | 0.378 |
+
+| Label | Precision | Recall | F1 | Support |
+|---|---|---|---|---|
+| `informed` | 1.000 | 0.250 | 0.400 | 8 |
+| `hot_take` | 0.581 | 1.000 | 0.735 | 18 |
+| `chatter` | 0.000 | 0.000 | 0.000 | 7 |
+
+Confidence: the most-confident third (11 posts) was 0.818 accurate and the
+least-confident third 0.545.
+
+What this run shows, read plainly: the model predicts `hot_take` for 31 of 33
+posts. Every real `chatter` post and 6 of 8 `informed` posts were called
+`hot_take`. Loss is still falling at epoch 3, so three epochs × ~10 steps on
+154 posts looks like too little training to pull the model away from the
+majority label. Checking these numbers against `criteria.md` (MET / MISSED
+across three seeds) is unit 6's job; the criteria were committed before this
+run and are not changed here.
 
 
 
@@ -201,19 +302,39 @@ of next unit's variance. -->
      workflow and disclosing it costs you nothing. Not disclosing it is the
      problem. -->
 
-**Moment 1**
+This project was carried out end to end with Claude (Claude Code) doing the
+work under my direction: the HN collection script, the taxonomy, the boundary
+tests, the criteria, every label, the validation script, running the notebook
+and this write-up.
 
-- *What I asked for:*
-- *What came back:*
-- *What I changed:*
+**Moment 1: boundary testing the taxonomy**
 
-**Moment 2**
+- *What I asked for:* stress-test the draft `informed` / `hot_take` line before
+  the full labelling pass.
+- *What came back:* eight original borderline sentences (in
+  [boundary_tests.md](boundary_tests.md), clearly marked as not real posts).
+  Test 2 ("Python 3.12 removed `distutils`…") had no separate opinion at all,
+  and the draft definition didn't clearly cover it.
+- *What changed:* the `informed` definition gained "or its main point is itself
+  a specific, checkable fact", and "named source" now requires saying *what*
+  the source says (tests 5 vs 6).
 
-- *What I asked for:*
-- *What came back:*
-- *What I changed:*
+**Moment 2: second-pass review of the pre-labels**
 
-**Pre-labelling disclosure:**
+- *What I asked for:* re-check all 200 pre-labelled rows against the final
+  two-step rule.
+- *What came back:* five changes. The informative one was the praise post in
+  hard case 3: the draft treated praise as `chatter`, but under step 1 a post
+  that asserts a general verdict is `hot_take`, and a row like "I'm no stranger
+  to doing talks, it's on my to-do-list" had been pre-labelled `informed` with
+  nothing about the topic in it.
+- *What changed:* the praise/verdict line was written into the rule and the
+  five rows were relabelled, each with its reason in the note.
+
+**Pre-labelling disclosure:** all 220 labels are AI-generated (Claude). 200 were
+AI pre-labels re-checked by a second AI pass; the 20 rows reserved for human
+cold labelling were also labelled by AI. No label has been reviewed by a human,
+and none is presented as one. The `note` column records which path each row took.
 
 <!-- ═══════════════════════ UNIT 6 — THE TEST ═══════════════════════
 
