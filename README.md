@@ -683,6 +683,33 @@ on every seed.**
   at the edge of overfitting 154 posts, and more epochs alone would not keep
   helping.
 
+### Second improvement (optional stretch): +30 real posts
+
+*This section is outside the required single improvement. The first
+experiment above is left as it was: `results_three_seeds_after.json` is not
+overwritten. This part was written and committed before the run.*
+
+**What I changed (one more variable, the data):** option B. I added 30 real
+HN comments that were collected in `data/raw_hn_posts.csv` but never used:
+15 `chatter` and 15 `informed`. That takes labels.csv from 220 to 250 rows
+(`hot_take` 118, `informed` 71, `chatter` 61, so 47.2 / 28.4 / 24.4%;
+`validate_labels.py` passes). Claude labelled them under the same two-step
+rule, and the `note` column says so. No human reviewed them. `EPOCHS` stays
+at 10, and every other setting is unchanged. Results go to
+`results_three_seeds_after2.json`.
+
+**Which diagnosis pointed at it:** after the 10-epoch run, the remaining
+misses sit on the two smallest labels (`chatter` F1 0.222–0.444, `informed`
+0.400–0.737), and val loss was already turning up at epoch 10. That means
+more epochs is used up and more examples of the weak labels is the next lever.
+
+**Caveat, stated in advance:** the notebook splits the whole file 70/15/15,
+so adding rows also re-draws the test split. It grows from 33 to about 38
+posts, with more `chatter` and `informed`. The after2 numbers are therefore
+not on the identical 33 posts. A larger minority-class test set is also a
+fairer measure of criterion 3, which was one of the measurement problems
+named in What's Still Broken.
+
 
 ---
 
