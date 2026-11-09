@@ -696,7 +696,9 @@ HN comments that were collected in `data/raw_hn_posts.csv` but never used:
 `validate_labels.py` passes). Claude labelled them under the same two-step
 rule, and the `note` column says so. No human reviewed them. `EPOCHS` stays
 at 10, and every other setting is unchanged. Results go to
-`results_three_seeds_after2.json`.
+`results_three_seeds_after2.json`. After this run, the notebook's saved
+section 1–3 outputs show the 250-row file. The section 4–5 outputs and
+`results.json` / `test_split.csv` are still the unit 5 run on 220 rows.
 
 **Which diagnosis pointed at it:** after the 10-epoch run, the remaining
 misses sit on the two smallest labels (`chatter` F1 0.222–0.444, `informed`
@@ -710,12 +712,72 @@ not on the identical 33 posts. A larger minority-class test set is also a
 fairer measure of criterion 3, which was one of the measurement problems
 named in What's Still Broken.
 
+#### Run Log — After 2 (+30 posts, 10 epochs)
+
+`results_three_seeds_after2.json`. Split 174 / 38 / 38 on every seed. Test
+labels: `hot_take` 18, `informed` 11, `chatter` 9. Always-`hot_take` on this
+test set scores 0.474.
+
+| Criterion | Target | Seed 42 | Seed 7 | Seed 2024 | Verdict |
+|---|---|---|---|---|---|
+| 1. Accuracy | ≥ 0.65 | 0.658 | 0.684 | 0.711 | MET |
+| 2. Macro F1 | ≥ 0.55 | 0.635 | 0.628 | 0.684 | MET |
+| 3. `informed` / `chatter` F1 | each ≥ 0.45 | 0.600 / 0.588 | 0.583 / 0.500 | 0.667 / 0.615 | MET |
+| 4. Label shares (data) | largest ≤ 0.60, smallest ≥ 0.20 | 0.472 / 0.244 | 0.472 / 0.244 | 0.472 / 0.244 | MET |
+| 5. Top-third minus bottom-third accuracy | ≥ 0.15 | 0.917 − 0.500 = 0.417 | 0.750 − 0.667 = 0.083 | 0.917 − 0.667 = 0.250 | MISSED (seed 7) |
+
+Seed spread: accuracy 0.053, macro F1 0.056, `informed` F1 0.083,
+`hot_take` F1 0.082, `chatter` F1 0.115. That is the tightest of the three
+runs.
+
+Confusion matrix, seed 42:
+
+| true \ predicted | informed | hot_take | chatter |
+|---|---|---|---|
+| **informed** | 6 | 5 | 0 |
+| **hot_take** | 1 | 14 | 3 |
+| **chatter** | 2 | 2 | 5 |
+
+**Did it help, and how do I know:** yes. Mean accuracy went from 0.657 to
+0.684, mean macro F1 from 0.558 to 0.649, `informed` F1 from 0.536 to 0.617,
+and `chatter` F1 from 0.370 to 0.568. Criteria 1–3 now hold on all three
+seeds. In the 10-epoch-only run they held on seed 2024 alone. Val loss also
+flattened instead of rising (seed 2024: 0.670 at epoch 10, its lowest). That
+fits more data reducing the overfitting seen at 10 epochs on 154 posts.
+
+**Honest limits on that claim:**
+- The test set changed (33 → 38 posts), so this is not a same-posts
+  comparison.
+- Of the 30 new posts, 6 / 2 / 3 landed in the seed 42 / 7 / 2024 test sets.
+  The rest went to train/val. The new rows are AI-labelled and were picked
+  as clear examples, so they may be easier than average. That could flatter
+  seed 42 most, since 6 of its 38 test posts are new. Seed 7 has only 2 new
+  test posts and still clears criteria 1–3.
+- Seed 42's accuracy of 0.658 clears 0.65 by about one post out of 38.
+- Criterion 5 now fails on seed 7. Its least-confident third is already
+  0.667 accurate, so confidence barely separates right from wrong there.
+  With 12 posts per third, one post moves either third by 0.083.
+
 
 ---
 
 ## What's Still Broken
 
 <!-- For each criterion still missed: what you'd do, and why you stopped. -->
+
+**Update after the second improvement:** with +30 posts, criteria 1–4 hold on
+all three seeds. Two problems remain:
+- **Criterion 5 now misses** on seed 7 (0.083 against 0.15). Next I would
+  measure it on a larger test set or average it across seeds before changing
+  anything. Its thirds are 12 posts, and the miss is one post in each third.
+- **Criteria 1–3 pass with thin margins** on a re-drawn 38-post test set.
+  The `informed` → `hot_take` direction is still the biggest error
+  (5 / 4 / 3 per seed). Real confidence that the margins hold needs
+  human-reviewed labels and a bigger fixed test set.
+
+I stopped here: one required improvement plus one documented stretch
+improvement, each changing one variable. The bullets below describe the state
+after the first improvement and are kept as they were written.
 
 - **Criteria 1 and 2 (accuracy, macro F1).** These pass on seed 2024 only.
   Seed 42's 0.636 is 0.014 short, which is inside the 0.121 seed spread, so
@@ -801,8 +863,10 @@ over the line on all seeds.
 Probably. Val loss stops improving around epoch 6–9 and rises a little by
 epoch 10, so more epochs is nearly exhausted. The remaining misses sit on
 the two smallest labels. That points to option B (more `chatter` and
-`informed` posts) as the next single change. This is a reasoned expectation,
-not a tested result.
+`informed` posts) as the next single change. The stretch run then tested
+this. +30 posts raised mean macro F1 from 0.558 to 0.649 and `chatter` F1 from
+0.370 to 0.568. That supports the expectation, with the changed-test-set
+caveat in that section.
 
 **What are the limits of measuring performance on this dataset?**
 - The test split is 33 posts, with only 7 `chatter` and 8 `informed`. One
